@@ -239,9 +239,6 @@ Namelist variables specifically for the WPS input for real:
                                                 ; level of max wind information in real.  With a value of 300 hPa, then
                                                 ; a max wind value at 500 hPa will be ignored.
                                                 ; ARW real only.
- use_maxw_level                                 ; 0=do not use max wind speed level in vertical interpolation inside
-                                                ; of the ARW real program, 1 = use level
- use_trop_level                                 ; as above, with tropopause level data
  sfcp_to_sfcp                        = .false.  ; Optional method to compute model's surface pressure when incoming
                                                 ; data only has surface pressure and terrain, but not SLP
  smooth_cg_topo	                     = .false.  ; Smooth the outer rows and columns of domain 1's topography w.r.t.
@@ -466,8 +463,8 @@ Namelist variables for controlling the adaptive time step option:
                                      = 16, WDM 6-class scheme
                                      = 17, NSSL 2-moment 4-ice scheme (steady background CCN)
                                      = 18, NSSL 2-moment 4-ice scheme with predicted CCN (better for idealized than real cases)
-                                       ; to set a global CCN value, use
-                                       nssl_cccn  = 0.7e9   ; CCN for NSSL scheme (18). Also sets same value to ccn_conc for mp_physics=18
+                                       ; to set a global CCN value, use nssl_cccn  = 0.7e9   
+                                       ; Also sets ccn_conc to the same value as nssl_cccn for mp_physics=18 (for correct boundary inflow condition)
                                      = 19, NSSL 1-moment (7 class: qv,qc,qr,qi,qs,qg,qh; predicts graupel density)
                                      = 21, NSSL 1-moment, (6-class), very similar to Gilmore et al. 2004
                                            Can set intercepts and particle densities in physics namelist, e.g., nssl_cnor
@@ -492,6 +489,44 @@ Namelist variables for controlling the adaptive time step option:
                                            fast version
                                      = 32, HUJI spectral bin microphysics, full version
                                      = 95, Ferrier (old Eta) microphysics, operational NAM (WRF NMM) version
+
+Electrification options (must compile with WRF_ELEC=1 -- see README.electricity)
+ elec_physics                        = 0, electrification (and charge arrays) turned off (DEFAULT)
+                                     = 1, electrification turned on with "1D" lightning scheme based on Ziegler and MacGorman (1994, JAS) (only works with mp_physics = 17 or 18, i.e., 2-moment NSSL schemes)
+ nssl_ipelec (max_dom)     ! NOTE: only set this to a nonzero value on the innermost domain
+                                     = 0, charging turned off (DEFAULT)
+                                     = 2, non-inductive charging only
+                                     = 3, non-inductive + inductive charging
+                                     = 1, not used (reserved for future use)
+ nssl_idischarge                     = 0, no discharge
+                                     = 1, discharge turned on (DEFAULT)
+ nssl_iscreen                        = 0, no screening layer (DEFAULT)
+                                     = 1, screening layer scheme of Ziegler et al. (1991, JGR)
+                                     = 2, screening layer only applied at cloud top (seems to be better for storm complexes and large storms)
+ nssl_ibrkd                          = breakdown electric field profile to initiate lightning
+                                     = 1, constant profile with height with value set by nssl_ecrit
+                                     = 2 to 5, variants of vertical Ecrit profile of Dwyer (2003, GRL) - '4' is recommended (DEFAULT is 4).
+ nssl_isaund                         = Calls the appropriate version of the UMIST (e.g., Saunders et al. 1991 scheme)
+                                     = -5 : Saunders etal 1991 (following Helsdon et al. 2001, but use normal charging instead of 'anomalous' zones)
+                                     = 0 : Saunders 1991 (modified as in Wojcik 1994)
+                                     = 2 : RR scheme ( no extra factor ) (Mansell et al. 2005, JGR)
+                                     = 4 : Saunders and Peck Scheme ( no extra factor ) (Mansell et al. 2005, JGR)
+                                     = 9 : Saunders and Peck Scheme ( no extra factor, cutoff at -32.47 as orig eq. from sp98 ) (Mansell et al. 2010, JAS)
+                                     = 10 : Brooks et al. RARcrit for T > -15 using saund2 (otherwise same as isaund=2) (set rarfac to negative in saund2)
+                                     = 11 : Brooks et al. RARcrit for T > -15 using saund6 (otherwise same as isaund=4)
+                                     = 12 : Brooks et al. RARcrit for T > -15 using saund6 (otherwise same as isaund=9) (DEFAULT)
+ nssl_lightrad                       = 6000, radius (m) of discharge cylinder for 1-D discharge scheme
+ nssl_disfrac                        = 0.3, nominal fraction of charge removed per discharge
+ nssl_ecrit                          = 120000, breakdown electric field (Volts) to initiate lightning (i.e., constant value with height). (for nssl_ibrkd=1)
+
+Water vapor nudging based on gridded lightning rates (Fierro et al. 2012, MWR) (see tools/LIGHT_INTERP_WRF_GRID.f 
+for interpolating lightning data to the WRF grid)
+ nudge_lightning (max_dom)           = 0, no nudging (default)
+                                     = 1, nudging of lightning data as in Fierro et al. (2012, MWR).
+ nudge_light_times (max_dom)         = 0,    start time in sec (relative to local domain) of lightning Qv nudging 
+ nudge_light_timee (max_dom)         = 7200, end time in sec (relative to local domain) of lightning Qv nudging 
+ nudge_light_int (max_dom)           = 600, time interval (in sec) of input lightning data files 
+
 
  For non-zero mp_physics options, to keep Qv .GE. 0, and to set the other moisture
  fields .LT. a critcal value to zero
@@ -782,7 +817,7 @@ Namelist variables for controlling the adaptive time step option:
  num_soil_layers                     = 5,	; number of soil layers in land surface model
                                                   = 5: thermal diffusion scheme
                                                   = 4: Noah landsurface model
-                                                  = 6 or 9: RUC landsurface model
+                                                  = 6: RUC landsurface model
                                                   = 10: CLM4 landsurface model
                                                   = 2: Pleim-Xu landsurface model
                                                   = 3: SSiB landsurface model
@@ -1194,7 +1229,7 @@ The following are for observation nudging:
                                                       (dampcoef nondimensional ~0.01-0.1)
                                                   2 = with Rayleigh  damping (dampcoef inverse time scale [1/s] e.g. .003; idealized case only
                                                       not for real-data cases)
-                                                  3 = with w-Rayleigh damping (dampcoef inverse time scale [1/s] e.g. .2; 
+                                                  3 = with w-Rayleigh damping (dampcoef inverse time scale [1/s] e.g. .05; 
                                                       for real-data cases)
  use_theta_m                         = 0        ; 1: use theta_m=theta(1+1.61Qv)
                                                   0: use dry theta in dynamics
@@ -1357,10 +1392,6 @@ The following are for observation nudging:
                                                   Only 40 for jpeg2000 or 41 for PNG are supported
 
 
-By default the pressure and height level data goes into stream 23 and 22, respectively. Using
-the vertical interpolation options requires the user to define an io_form and interval for
-the requested stream.  See examples.namelist.
-
  &diags:
  p_lev_diags                         = 1,       ; Vertically interpolate diagnostics to p-levels
                                                   0=NO, 1=YES
@@ -1372,12 +1403,6 @@ the requested stream.  See examples.namelist.
                                                   (p_hyd).  The p_hyd option is the default and less noisy.  Total
                                                   pressure is consistent with what is done in various post-proc
                                                   packages.
- z_lev_diags                         = 0,       ; Vertically interpolate diagnostics to z-levels
-                                                  0=NO, 1=YES
- num_z_levels                        = 2,       ; Number of height levels to interpolate to
- z_levels                            = 0,       ; List of height values (m) to interpolate data to. 
-                                                ;   Positive numbers are for height above mean sea level (i.e. a flight level)
-                                                ;   Negative numbers are for levels above ground
  /
 
 AFWA diagnostics:

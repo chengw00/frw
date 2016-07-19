@@ -50,8 +50,8 @@
 # table entries are of the form
 #<Table> <Type> <Sym>         <Dims>   <Use>   <NumTLev> <Stagger> <IO>     <DNAME>             <DESCRIP>     <UNITS>
 #
-state    real  XLAT             ij      misc        1         -     i0123rh01{22}{23}du=(copy_fcnm)      "XLAT"                "LATITUDE, SOUTH IS NEGATIVE"                                          "degree_north"
-state    real  XLONG            ij      misc        1         -     i0123rh01{22}{23}du=(copy_fcnm)      "XLONG"               "LONGITUDE, WEST IS NEGATIVE"                                          "degree_east"
+state    real  XLAT             ij      misc        1         -     i0123rh01{23}du=(copy_fcnm)      "XLAT"                "LATITUDE, SOUTH IS NEGATIVE"                                          "degree_north"
+state    real  XLONG            ij      misc        1         -     i0123rh01{23}du=(copy_fcnm)      "XLONG"               "LONGITUDE, WEST IS NEGATIVE"                                          "degree_east"
 
 # It is required that LU_INDEX appears before any variable that is
 # interpolated with a mask, as lu_index supplies that mask.
@@ -160,9 +160,7 @@ state    real   min_p          ij       dyn_em      1        -     i0d  "MIN_P" 
 state    real   hgtmaxw        ij       dyn_em      1        -     i1  "HGTMAXW"    "Height of the max wind speed"       "m"
 state    real   hgttrop        ij       dyn_em      1        -     i1  "HGTTROP"    "Height of the tropopause"           "m"
 state    real   pmaxw          ij       dyn_em      1        -     i1  "PMAXW"      "Pressure of the max wind speed"     "Pa"
-state    real   pmaxwnn        ij       dyn_em      1        -     i1  "PMAXWNN"    "PMAXW, nearest neighbor interp"     "Pa"
 state    real   ptrop          ij       dyn_em      1        -     i1  "PTROP"      "Pressure of the tropopause"         "Pa"
-state    real   ptropnn        ij       dyn_em      1        -     i1  "PTROPNN"    "PTROP, nearest neighbor interp      "Pa"
 state    real   tmaxw          ij       dyn_em      1        -     i1  "TMAXW"      "Temperature of the max wind speed"  "K"
 state    real   ttrop          ij       dyn_em      1        -     i1  "TTROP"      "Temperature of the tropopause"      "K"
 state    real   umaxw          ij       dyn_em      1        X     i1  "UMAXW"      "U-component of the max wind speed"  "m s-1"
@@ -389,15 +387,15 @@ state    real   p_hyd           ikj     dyn_em      1         -      irh       "
 state    real   p_hyd_w         ikj     dyn_em      1         Z       r        "p_hyd_w"     "hydrostatic pressure at full levels"         "Pa"
 
 # 2m and 10m output diagnostics
-state    real   Q2               ij     misc        1         -     irh0{22}{23}du     "Q2"                   "QV at 2 M"         "kg kg-1"
-state    real   T2               ij     misc        1         -     i01rh0{22}{23}du   "T2"                   "TEMP at 2 M"       "K"
+state    real   Q2               ij     misc        1         -     irh0{23}du     "Q2"                   "QV at 2 M"         "kg kg-1"
+state    real   T2               ij     misc        1         -     i01rh0{23}du   "T2"                   "TEMP at 2 M"       "K"
 state    real   TH2              ij     misc        1         -     irhdu     "TH2"                  "POT TEMP at 2 M"   "K"
 state    real   PSFC             ij     misc        1         -     i01rhdu   "PSFC"                 "SFC PRESSURE"      "Pa"
 
 # these next 2 are for the HFSoLE/PET demo; writing these to auxhist1 output over MCEL for coupling
 # with wave model, only if compiled with -DMCELIO, JM 2003/05/29
-state    real   U10              ij     misc        1         -     irh01{22}{23}du     "U10"                "U at 10 M"         "m s-1"
-state    real   V10              ij     misc        1         -     irh01{22}{23}du     "V10"                "V at 10 M"         "m s-1"
+state    real   U10              ij     misc        1         -     irh01du     "U10"                "U at 10 M"         "m s-1"
+state    real   V10              ij     misc        1         -     irh01du     "V10"                "V at 10 M"         "m s-1"
 # LPI
 state    real   LPI              ij     misc        1         -     rhdu   "LPI"                 "Lightning Potential Index"      "m^2 s-2"
 
@@ -531,6 +529,25 @@ state   real    qvolg          ikjftb  scalar      1         -     \
    i0rhusdf=(bdy_interp:dt)    "QVGRAUPEL"     "Graupel Particle Volume" "m(3) kg(-1)"
 state   real    qvolh          ikjftb  scalar      1         -     \
    i0rhusdf=(bdy_interp:dt)    "QVHAIL"        "Hail Particle Volume" "m(3) kg(-1)"
+# SPACE CHARGE EXPLICIT LIGHTNING
+state   real    scr            ikjftb  scalar      1         -     \
+   i0rhusdf=(bdy_interp:dt)    "SCR"       "Rain space charge mixing ratio" "# C kg(-1)"
+state   real    scw            ikjftb  scalar      1         -     \
+   i0rhusdf=(bdy_interp:dt)    "SCW"       "cloud water space charge mixing ratio" "# C kg(-1)"
+state   real    sci            ikjftb  scalar      1         -     \
+   i0rhusdf=(bdy_interp:dt)    "SCI"       "cloud ice space charge mixing ratio" "# C kg(-1)"
+state   real    scs            ikjftb  scalar      1         -     \
+   i0rhusdf=(bdy_interp:dt)    "SCS"       "snow space charge mixing ratio" "# C kg(-1)"
+state   real    sch            ikjftb  scalar      1         -     \
+   i0rhusdf=(bdy_interp:dt)    "SCH"       "graupel water space charge mixing ratio" "# C kg(-1)"
+state   real    schl           ikjftb  scalar      1         -     \
+   i0rhusdf=(bdy_interp:dt)    "SCHL"       "hail water space charge mixing ratio" "# C kg(-1)"
+state   real    sciona          ikjftb  scalar      1         -     \
+   i0rhusdf=(bdy_interp:dt)    "SCIONA"       "Passive net ion space charge" "# C kg(-1)"
+state   real    clnox          ikjftb  scalar      1         -     \
+   i0rhusdf=(bdy_interp:dt)    "CLNOX"      "Lightning NOx concentration" "# moles kg(-1)"
+
+# END SPACE CHARGE EXPLICIT LIGHTNING
 
 state   real    -              ikjftb  dfi_scalar      1         -     -   -
 state   real    dfi_qndrop     ikjftb  dfi_scalar      1         -     \
@@ -1280,6 +1297,28 @@ state    real  SNOWNCV          ij      misc        1         -      r        "S
 state    real  GRAUPELNCV       ij      misc        1         -      r        "GRAUPELNCV"            "TIME-STEP NONCONVECTIVE GRAUPEL"                         "mm"
 state    real  HAILNCV          ij      misc        1         -      r        "HAILNCV"               "TIME-STEP NONCONVECTIVE HAIL"                            "mm"
 state    real    refl_10cm      ikj     dyn_em      1         -      hdu       "refl_10cm"             "Radar reflectivity (lamda = 10 cm)"  "dBZ"
+# EXPLICIT LIGHTNING
+#
+state    real    rscghis_2d      ij   misc    1         -     irh         "rscghis_2d"             "MAX NONINDUCTIVE CHARGING 2D"     "C m-2"
+state    real    induc           ikj  misc    1         -     irh         "induc"                  "TOTAL INDUCTIVE CHARGING "     "C m-3"
+state    real    noninduc        ikj  misc    1         -     irh         "noninduc"               "TOTAL NONINDUCTIVE CHARGING"     "C m-3"
+state    real    sctot           ikj  misc    1         -     irh         "sctot"                  "Total Space Charge Density"     "C m-3"
+state    real    elecmag         ikj  misc    1         -     irh         "elecmag"                "EFIELD MAGNITUDE"     "V m-1"
+# If Ex and Ey are desired in the output, make sure to add them to the variable list of nssl_2momlgte1d and nssl_2momlgte1dccn. Otherwise they will be added to ALL schemes.
+state    real    elecx           ikj  misc    1         -     irh         "elecx"                  "EFIELD X-Component"     "V m-1"
+state    real    elecy           ikj  misc    1         -     irh         "elecy"                  "EFIELD Y-Component"     "V m-1"
+state    real    elecz           ikj  misc    1         -     irh         "elecz"                  "EFIELD Z-Component"     "V m-1"
+state    real    pot             ikj  misc    1         -     irh         "pot"                    "POTENTIAL"     "V"
+state    real    light            ij  misc    1         -     irh         "light"                  "lightning flash"         "flash origin density"
+state    real    lightdens        ij  misc    1         -     irh         "lightdens"              "lightning flash density"         "flash column-1"
+state    integer lightdis         ij  misc    1         -     irh         "lightdis"               "lightning dis ted"     "Source column-1"
+state    real    flshi           ikj  misc    1         -     irh         "flshi"                  "Lightning init points"     "count"
+state    real    flshn           ikj  misc    1         -     irh         "flshn"                  "Negative channels"     "count"
+state    real    flshp           ikj  misc    1         -     irh         "flshp"                  "Positive channels"     "count"
+# END EXPLICIT LIGHTNING
+# LIGHTNING NUDGING
+state    real    ltg_dat        ij  misc    1         -     rh         "ltg_dat"                "gridded lightning data"  "Flash per xkm x xkm per LAD_INT sec"
+# END LIGHTNING NUDGING
 state    real  NCA              ij      misc        1         -      r        "NCA"                   "COUNTER OF THE CLOUD RELAXATION TIME IN KF CUMULUS SCHEME"    ""      
 state    integer  LOWLYR        ij      misc        1         -     -         "LOWLYR"                "INDEX OF LOWEST MODEL LAYER ABOVE THE GROUND IN BMJ SCHEME"   ""      
 state    real  MASS_FLUX        ij      misc        1         -      r        "MASS_FLUX"             "DOWNDRAFT MASS FLUX FOR IN GRELL CUMULUS SCHEME"  "mb hour-1"
@@ -1340,7 +1379,7 @@ state    real  SWDOWNC          ij      misc        1         -      -        "S
 state    real  GSW              ij      misc        1         -      rd       "GSW"                   "NET SHORT WAVE FLUX AT GROUND SURFACE"           "W m-2"      
 state    real  GLW              ij      misc        1         -      rhd      "GLW"                   "DOWNWARD LONG WAVE FLUX AT GROUND SURFACE"            "W m-2"      
 state    real  SWNORM           ij      misc        1         -      rhd      "SWNORM"                "NORMAL SHORT WAVE FLUX AT GROUND SURFACE (SLOPE-DEPENDENT)"           "W m-2"
-state    real  diffuse_frac     ij      misc        1         -      rd       "DIFFUSE_FRAC"          "DIFFUSE FRACTION OF SURFACE SHORTWAVE IRRADIANCE"       ""
+state    real  diffuse_frac     ij      misc        1         -      rhd      "DIFFUSE_FRAC"          "DIFFUSE FRACTION OF SURFACE SHORTWAVE IRRADIANCE"       ""
 # WRF-Solar
 state   real    swddir       ij     misc         1         -     rd     "SWDDIR"     "Shortwave surface downward direct irradiance" "W m-2" ""
 state   real    swddni       ij     misc         1         -     rd     "SWDDNI"     "Shortwave surface downward direct normal irradiance" "W m-2" ""
@@ -1964,8 +2003,6 @@ rconfig   real    zap_close_levels        namelist,domains	1              500   
 rconfig   real    maxw_horiz_pres_diff    namelist,domains	1              5000    irh    "maxw_horiz_pres_diff"   "pressure limit (Pa), when horiz diff exceeded do not use max_wind level in real"
 rconfig   real    trop_horiz_pres_diff    namelist,domains	1              5000    irh    "trop_horiz_pres_diff"   "pressure limit (Pa), when horiz diff exceeded do not use tropopause level in real"
 rconfig   real    maxw_above_this_level   namelist,domains	1              30000   irh    "maxw_above_this_level"  "pressure limit (Pa), only use the max_wind data at or above this level"
-rconfig   integer use_maxw_level          namelist,domains	1              0       irh    "use_maxw_level"         "0=no/1=yes: in real, use the input metgrid U, V, T, GHT at the level of max wind speed"
-rconfig   integer use_trop_level          namelist,domains	1              0       irh    "use_trop_level"         "0=no/1=yes: in real, use the input metgrid U, V, T, GHT at the tropopause level"
 rconfig   logical sfcp_to_sfcp            namelist,domains	1              .false. irh    "sfcp_to_sfcp"   "T/F use incoming sfc pres to compute new sfc pres"      "flag"
 rconfig   logical adjust_heights          namelist,domains	1              .false. irh    "adjust_heights"   "T/F adjust pressure level input to match 500 mb height"      "flag"
 rconfig   logical smooth_cg_topo          namelist,domains	1              .false. irh    "smooth_cg_topo"   "T/F smooth CG topo on boundarries" "flag"
@@ -2075,6 +2112,29 @@ rconfig   real     nssl_cnos              namelist,physics      max_domains  3.e
 rconfig   real     nssl_rho_qh            namelist,physics      max_domains  500.     rh       "Graupel particle density"  ""      ""
 rconfig   real     nssl_rho_qhl           namelist,physics      max_domains  900.     rh       "Hail particle density"  ""      ""
 rconfig   real     nssl_rho_qs            namelist,physics      max_domains  100.     rh       "Snow particle density"  ""      ""
+rconfig   integer  elec_physics           namelist,physics      1            0       irh       "elec_physics"            ""      ""
+
+
+# Lightning Qv Nudging 
+rconfig   integer  nudge_lightning        namelist,physics      max_domains   0       rh       "flag for lightning Qv nudging"  ""      ""
+rconfig   integer  nudge_light_times      namelist,physics      max_domains   0       rh       "start time in sec (domain relative) for lightning Qv nudging"  ""      ""
+rconfig   integer  nudge_light_timee      namelist,physics      max_domains   7200    rh       "end time in sec (domain relative) for lightning Qv nudging"  ""      ""
+rconfig   integer  nudge_light_int        namelist,physics      max_domains   600     rh       "time interval in sec of input lightning data files"  ""      ""
+rconfig   character  path_to_files        namelist,physics      1             "~/WRFV3/"    rh   "path on local machine of input lightning data files"  ""      ""
+# Explicit lightning
+rconfig   integer  nssl_ipelec            namelist,physics      max_domains   0       rh       "Electrification selection"  ""      ""
+rconfig   integer  nssl_isaund            namelist,physics      1             12      rh       "Charge separation selection"  ""      ""
+rconfig   integer  nssl_iscreen           namelist,physics      1             0       rh       "Screening layer parameterization flag"  ""      ""
+rconfig   real     nssl_lightrad          namelist,physics      1             6000    rh       "discharge cylinder radius (m)"  ""      ""
+rconfig   integer  nssl_idischarge        namelist,physics      1             1       rh       "lightning discharge flag"  ""      ""
+rconfig   integer  nssl_ibrkd             namelist,physics      1             4       rh       "Critical Breakeven Efield profile selection"  ""      ""
+rconfig   real     nssl_ecrit             namelist,physics      1             120000  rh       "Critical Breakeven Efield magnitude for discharge (V/m) assuming height-constant Ecrit profile"  ""      ""
+rconfig   real     nssl_disfrac           namelist,physics      1             0.3      rh       "percentile of charge removed upon discharge (BLM)"  ""      ""
+# end Explicit lightning
+
+
+
+
 rconfig   integer     gsfcgce_hail        namelist,physics      1              0       rh       "gsfcgce select hail/graupel"  ""      ""
 rconfig   integer     gsfcgce_2ice        namelist,physics      1              0       rh       "gsfcgce select 2ice/3ice"  ""      ""
 rconfig   integer     progn               namelist,physics      max_domains    0       rh       "progn"                 ""      ""
@@ -2605,6 +2665,11 @@ package   temfsfcscheme      sf_sfclay_physics==10       -             state:wm_
 package   idealscmsfcscheme  sf_sfclay_physics==89       -             -
 package   sfclayscheme       sf_sfclay_physics==91       -             -
 
+package   noelec             elec_physics==0             -             -
+package   eleclgt1d          elec_physics==1             -             scalar:scr,scw,sci,scs,sch,schl,sciona;state:rscghis_2d,sctot,noninduc,induc,pot,elecmag,elecx,elecy,elecz,light,lightdens,lightdis
+package   eleclgtmsz         elec_physics==2             -             scalar:scr,scw,sci,scs,sch,schl,sciona;state:rscghis_2d,sctot,noninduc,induc,pot,elecmag,elecx,elecy,elecz,light,lightdens,lightdis,flshi,flshn,flshp
+package   eleclgtmsznox      elec_physics==3             -             scalar:scr,scw,sci,scs,sch,schl,sciona,clnox;state:rscghis_2d,sctot,noninduc,induc,pot,elecmag,elecx,elecy,elecz,light,lightdens,lightdis,flshi,flshn,flshp
+
 package   noahucmscheme  sf_urban_physics==1         -             state:trb_urb4d,tw1_urb4d,tw2_urb4d,tgb_urb4d,sfw1_urb3d,sfw2_urb3d,sfr_urb3d,sfg_urb3d,a_u_bep,a_v_bep,a_t_bep,a_q_bep,a_e_bep,b_u_bep,b_v_bep,b_t_bep,b_q_bep,b_e_bep,dlg_bep,dl_u_bep,sf_bep,vl_bep,mh_urb2d,stdh_urb2d,lf_urb2d,lp_urb2d,hgt_urb2d,lb_urb2d,tgr_urb2d,cmcr_urb2d,drelr_urb2d,drelb_urb2d,drelg_urb2d,flxhumr_urb2d,flxhumb_urb2d,flxhumg_urb2d,tgrl_urb3d,smr_urb3d,cmgr_sfcdif,chgr_sfcdif,trl_urb3d,tgl_urb3d,tbl_urb3d
 package   bepscheme      sf_urban_physics==2         -             state:a_u_bep,a_v_bep,a_t_bep,a_q_bep,a_e_bep,b_u_bep,b_v_bep,b_t_bep,b_q_bep,b_e_bep,dlg_bep,dl_u_bep,sf_bep,vl_bep,trb_urb4d,tw1_urb4d,tw2_urb4d,tgb_urb4d,sfw1_urb3d,sfw2_urb3d,sfr_urb3d,sfg_urb3d,hi_urb2d,lp_urb2d,hgt_urb2d,lb_urb2d,trl_urb3d,tgl_urb3d,tbl_urb3d
 package   bep_bemscheme  sf_urban_physics==3         -             state:a_u_bep,a_v_bep,a_t_bep,a_q_bep,a_e_bep,b_u_bep,b_v_bep,b_t_bep,b_q_bep,b_e_bep,dlg_bep,dl_u_bep,sf_bep,vl_bep,trb_urb4d,tw1_urb4d,tw2_urb4d,tgb_urb4d,tlev_urb3d,qlev_urb3d,tw1lev_urb3d,tw2lev_urb3d,tglev_urb3d,tflev_urb3d,sf_ac_urb3d,lf_ac_urb3d,cm_ac_urb3d,sfvent_urb3d,lfvent_urb3d,sfwin1_urb3d,sfwin2_urb3d,sfw1_urb3d,sfw2_urb3d,sfr_urb3d,sfg_urb3d,hi_urb2d,lp_urb2d,hgt_urb2d,lb_urb2d,trl_urb3d,tgl_urb3d,tbl_urb3d
@@ -2812,7 +2877,7 @@ halo      HALO_EM_INIT_3 dyn_em 48:ph0,php,t_init,mub,mu0,p,al,alt,alb
 halo      HALO_EM_INIT_4 dyn_em 48:pb,h_diabatic,qv_diabatic,qc_diabatic,msftx,msfty,msfux,msfuy,msfvx,msfvy,msfvx_inv,f,e,sina,cosa,ht,potevp,snopcx,soiltb,xlat,xlong,xlat_u,xlat_v,xlong_u,xlong_v,clat
 halo      HALO_EM_INIT_5 dyn_em 48:moist,chem,scalar,tracer
 halo      HALO_EM_INIT_6 dyn_em 48:om_tmp,om_s,om_u,om_v,om_depth,om_tini,om_sini,om_lat,om_lon,om_ml
-halo      HALO_EM_VINTERP_UV_1 dyn_em 48:pd_gc,pb,pmaxw,ptrop,pmaxwnn,ptropnn
+halo      HALO_EM_VINTERP_UV_1 dyn_em 24:pd_gc,pb,pmaxw,ptrop
 halo      HALO_EM_A dyn_em  8:ru,rv,rw,ww,php,alt,al,p,muu,muv,mut
 halo      HALO_EM_PHYS_A  dyn_em 4:u_2,v_2
 halo      HALO_EM_PHYS_PBL dyn_em        4:rublten,rvblten

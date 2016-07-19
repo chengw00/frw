@@ -83,6 +83,7 @@ MODULES = \
 	module_mp_gsfcgce.o \
 	module_mp_morr_two_moment.o \
 	module_mp_milbrandt2mom.o \
+	module_mp_nudge_light.o \
 	module_mp_nssl_2mom.o \
 	module_mp_wdm5.o \
 	module_mp_wdm6.o \
@@ -184,8 +185,7 @@ DIAGNOSTIC_MODULES_EM = \
 	module_diag_afwa_hail.o \
 	module_diag_cl.o \
 	module_diag_misc.o \
-	module_diag_pld.o \
-	module_diag_zld.o
+	module_diag_pld.o
   
 DIAGNOSTIC_MODULES_NMM = \
 	module_diag_refl.o

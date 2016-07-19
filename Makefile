@@ -10,7 +10,11 @@ CHEM_FILES =	../chem/module_aerosols_sorgam.o \
 		../chem/module_input_tracer.o \
 		../chem/module_aerosols_soa_vbs.o
 CHEM_FILES2 =	../chem/module_data_mosaic_asect.o
-
+ELEC_FILES = ../elec/module_commasmpi.o \
+             ../elec/module_mp_boxmgsetup.o \
+             ../elec/module_mp_screen.o \
+             ../elec/module_mp_discharge.o \
+             ../elec/include_microphysics_driver_elec.F
 deflt :
 		@ echo Please compile the code using ./compile
 
@@ -94,6 +98,7 @@ framework_only : configcheck
 wrf : framework_only
 	$(MAKE) MODULE_DIRS="$(ALL_MODULES)" physics
 	if [ $(WRF_CHEM) -eq 1 ]    ; then $(MAKE) MODULE_DIRS="$(ALL_MODULES)" chemics ; fi
+	if [ $(WRF_ELEC) -eq 1 ]    ; then $(MAKE) MODULE_DIRS="$(ALL_MODULES)" elecphys ; fi
 	if [ $(WRF_EM_CORE) -eq 1 ]    ; then $(MAKE) MODULE_DIRS="$(ALL_MODULES)" em_core ; fi
 	if [ $(WRF_NMM_CORE) -eq 1 ]   ; then $(MAKE) MODULE_DIRS="$(ALL_MODULES)" nmm_core ; fi
 	if [ $(WRF_EXP_CORE) -eq 1 ]   ; then $(MAKE) MODULE_DIRS="$(ALL_MODULES)" exp_core ; fi
@@ -862,13 +867,13 @@ framework :
                CPP="$(CPP)" LDFLAGS="$(LDFLAGS)" TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
 	       LIB_LOCAL="$(LIB_LOCAL)" \
                ESMF_MOD_DEPENDENCE="$(ESMF_MOD_DEPENDENCE)" AR="INTERNAL_BUILD_ERROR_SHOULD_NOT_NEED_AR" diffwrf; \
-          cd ../io_netcdf ; \
+          cd ../external/io_netcdf ; \
           $(MAKE) NETCDFPATH="$(NETCDFPATH)" FC="$(SFC) $(FCBASEOPTS)" RANLIB="$(RANLIB)" \
                CPP="$(CPP)" LDFLAGS="$(LDFLAGS)" TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
 	       LIB_LOCAL="$(LIB_LOCAL)" \
                ESMF_MOD_DEPENDENCE="$(ESMF_MOD_DEPENDENCE)" AR="INTERNAL_BUILD_ERROR_SHOULD_NOT_NEED_AR"; \
-          cd ../io_pio ; \
-          echo SKIPPING PIO BUILD $(MAKE) NETCDFPATH="$(PNETCDFPATH)" FC="$(SFC) $(FCBASEOPTS)" RANLIB="$(RANLIB)" \
+          cd ../external/io_pio ; \
+          $(MAKE) NETCDFPATH="$(PNETCDFPATH)" FC="$(SFC) $(FCBASEOPTS)" RANLIB="$(RANLIB)" \
                CPP="$(CPP)" LDFLAGS="$(LDFLAGS)" TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
 	       LIB_LOCAL="$(LIB_LOCAL)" \
                ESMF_MOD_DEPENDENCE="$(ESMF_MOD_DEPENDENCE)" AR="INTERNAL_BUILD_ERROR_SHOULD_NOT_NEED_AR"; \
@@ -877,6 +882,15 @@ framework :
                TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
                ESMF_MOD_DEPENDENCE="$(ESMF_MOD_DEPENDENCE)" AR="INTERNAL_BUILD_ERROR_SHOULD_NOT_NEED_AR" diffwrf ; \
           cd ../../frame )
+
+#          cd ../external/io_netcdf ; \
+#          $(MAKE) NETCDFPATH="$(NETCDFPATH)" FC="$(SFC) $(FCBASEOPTS)" RANLIB="$(RANLIB)" \
+#               CPP="$(CPP)" LDFLAGS="$(LDFLAGS)" TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
+#               ESMF_MOD_DEPENDENCE="$(ESMF_MOD_DEPENDENCE)" AR="$(AR)" ARFLAGS+"$(ARFLAGS)" diffwrf; \
+#          cd ../io_int ; \
+#          $(MAKE) SFC="$(SFC) $(FCBASEOPTS)" FC="$(SFC) $(FCBASEOPTS)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
+#               TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
+#               ESMF_MOD_DEPENDENCE="$(ESMF_MOD_DEPENDENCE)" AR="$(AR)" "$(ARFLAGS)" diffwrf ; \
 
 shared :
 	@ echo '--------------------------------------'
@@ -903,12 +917,24 @@ chemics :
 #	( cd chem ; $(MAKE) )
 #	( cd chem ; $(MAKE) $(J) )
 
+elecphys :
+	@ echo '--------------------------------------'
+	( cd elec ; $(MAKE) )
+
 physics :
 	@ echo '--------------------------------------'
 	if [ $(WRF_CHEM) -eq 0 ] ; then \
-		( cd phys ; $(MAKE) CF2=" " ) ; \
+		if [ $(WRF_ELEC) -eq 0 ] ; then \
+		  ( cd phys ; $(MAKE) CF2=" " EF=" " ) ; \
+		else \
+		  ( cd phys ; $(MAKE) EF="$(ELEC_FILES)" ) ; \
+		fi \
 	else \
-		( cd phys ; $(MAKE) CF2="$(CHEM_FILES2)" ) ; \
+		if [ $(WRF_ELEC) -eq 0 ] ; then \
+		  ( cd phys ; $(MAKE) CF2="$(CHEM_FILES2)" EF=" ") ; \
+		else \
+		  ( cd phys ; $(MAKE) CF2="$(CHEM_FILES2)"  EF="$(ELEC_FILES)" ) ; \
+		fi \
 	fi
 
 em_core :

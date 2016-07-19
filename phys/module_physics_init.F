@@ -192,6 +192,9 @@ CONTAINS
                          nssl_cnor, nssl_cnos,                   &
                          nssl_rho_qh, nssl_rho_qhl,              &
                          nssl_rho_qs,                             &
+! next 2 flags for Explicit lightning:
+                         nssl_ipelec,                             &
+                         nssl_isaund,                             &
    ! OPTIONAL 
                          RQCNCUTEN, RQINCUTEN,                   &
                          rliq,                                   &  !BSINGH:01/31/2013 - Added rliq and is_CAMMGMP_used for CAM5 physics
@@ -217,6 +220,7 @@ CONTAINS
                          ,G_URB2D_mosaic,RN_URB2D_mosaic                                                      & ! danli mosaic 
                          ,TS_URB2D_mosaic                                                                     & ! danli mosaic 
                          ,TS_RUL2D_mosaic                                                                     & ! danli mosaic
+                         ,qnn_curr, F_QNN   &
                          )
 
 !-----------------------------------------------------------------
@@ -472,6 +476,9 @@ CONTAINS
    REAL,    OPTIONAL, DIMENSION(ims:ime,jms:jme), INTENT(IN) :: RIVERCONDXY
    REAL,    OPTIONAL, DIMENSION(ims:ime,jms:jme), INTENT(IN) :: PEXPXY
 
+   REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),  OPTIONAL,  INTENT(INOUT ) ::   qnn_curr
+   LOGICAL, OPTIONAL, intent(in) :: f_qnn
+
    INTEGER , OPTIONAL,  INTENT(OUT) :: STEPWTD
    REAL , OPTIONAL, INTENT(IN) :: WTDDT
 
@@ -667,6 +674,7 @@ CONTAINS
                          nssl_rho_qh, nssl_rho_qhl,              &
                          nssl_rho_qs
 
+   INTEGER, OPTIONAL, INTENT(IN) :: nssl_ipelec,nssl_isaund
 
 ! WA 12/21/09
    REAL,OPTIONAL, DIMENSION( ims:ime , kms:kme , jms:jme ) , &
@@ -828,7 +836,7 @@ integer myproc
 #endif
    CALL nl_set_icloud_cu ( id , icloud_cu )
 
-  IF(.not.restart)THEN
+  IF(.not.restart)THEN !{
 !-- initialize common variables
      !BSINGH - When all the CAM parameterizations are not executed in WRF,
      !rliq can have undefined behaviour
@@ -987,7 +995,27 @@ integer myproc
                 its, ite, jts, jte, kts, kte                       )
    ENDIF
 
-  ENDIF
+   IF ( f_qnn ) THEN
+! Initialize simple ccn field
+     IF ( qnn_curr((ite+itf)/2,(kte+ktf)/2,(jte+jtf)/2) < 1.0 ) THEN ! initialize ccn if not already done
+       DO j=jts,jtf
+         DO k=kts,ktf
+          DO i=its,itf
+           IF ( config_flags%mp_physics == wdm5scheme .or. config_flags%mp_physics == wdm6scheme ) THEN
+             qnn_curr(i,k,j) = ccn_conc
+           ELSEIF ( config_flags%mp_physics == nssl_2momccn ) THEN
+             qnn_curr(i,k,j) = nssl_cccn/1.225
+             ccn_conc =  nssl_cccn/1.225
+           ELSE
+             qnn_curr(i,k,j) = ccn_conc
+           ENDIF
+          ENDDO
+         ENDDO
+        ENDDO
+      ENDIF
+   ENDIF
+   
+  ENDIF !}
 
 !-- convert zfull and zhalf to sigma values for ra_init (Eta CO2 needs these)
 !-- zfull/zhalf may be either zeta or eta
@@ -1242,6 +1270,7 @@ integer myproc
 !CAMMGMP specific variables
                 ixcldliq, ixcldice, ixnumliq, ixnumice,         &
                 nssl_cccn, nssl_alphah, nssl_alphahl,           &
+                nssl_ipelec, nssl_isaund,                       &
                          nssl_cnoh, nssl_cnohl,                  &
                          nssl_cnor, nssl_cnos,                   &
                          nssl_rho_qh, nssl_rho_qhl,              &
@@ -2906,7 +2935,7 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
 
       CASE (YSUSCHEME)
            if(isfc .ne. 1)CALL wrf_error_fatal &
-            ( 'module_physics_init: Use sf_sfclay_physics= 1 or 91 for this pbl option' )
+            ( 'module_physics_init: use sfclay scheme for this pbl option' )
            IF ((SF_URBAN_PHYSICS.eq.2).OR.(SF_URBAN_PHYSICS.EQ.3)) CALL wrf_error_fatal &
             ( 'module_physics_init: use myj (option 2) or boulac (option 8) with BEP/BEM urban scheme' )
            CALL ysuinit(RUBLTEN,RVBLTEN,RTHBLTEN,RQVBLTEN,    &
@@ -2919,7 +2948,7 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
                         its, ite, jts, jte, kts, kte          )
       CASE (SHINHONGSCHEME)
            if(isfc .ne. 1)CALL wrf_error_fatal &
-            ( 'module_physics_init: Use sf_sfclay_physics= 1 or 91 for this pbl option' )
+            ( 'module_physics_init: use sfclay scheme for this pbl option' )
            IF ((SF_URBAN_PHYSICS.eq.2).OR.(SF_URBAN_PHYSICS.EQ.3)) CALL wrf_error_fatal &
             ( 'module_physics_init: use myj (option 2) or boulac (option 8) with BEP/BEM urban scheme' )
            CALL shinhonginit(RUBLTEN,RVBLTEN,RTHBLTEN,RQVBLTEN,&
@@ -2932,7 +2961,7 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
                         its, ite, jts, jte, kts, kte          )
       CASE (MRFSCHEME)
            if(isfc .ne. 1)CALL wrf_error_fatal &
-            ( 'module_physics_init: Use sf_sfclay_physics= 1 or 91 for this pbl option' )
+            ( 'module_physics_init: use sfclay scheme for this pbl option' )
            IF ((SF_URBAN_PHYSICS.eq.2).OR.(SF_URBAN_PHYSICS.EQ.3)) CALL wrf_error_fatal &
             ( 'module_physics_init: use myj (option 2) or boulac (option 8) with BEP/BEM urban scheme' )
            CALL mrfinit(RUBLTEN,RVBLTEN,RTHBLTEN,RQVBLTEN,    &
@@ -3103,7 +3132,7 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
 
       CASE (GBMPBLSCHEME) 
            if(isfc .ne. 1)CALL wrf_error_fatal &
-            ( 'module_physics_init: Use sf_sfclay_physics= 1 or 91 for this pbl option' )
+            ( 'module_physics_init: use sfclay scheme for this pbl option' )
          CALL gbmpblinit(RUBLTEN,RVBLTEN,RTHBLTEN,RQVBLTEN,   &
                         RQCBLTEN,RQIBLTEN,P_QI,               &
                         PARAM_FIRST_SCALAR,TKE_PBL,           &
@@ -3505,6 +3534,7 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
 !CAMMGMP specific variables
                       ixcldliq, ixcldice, ixnumliq, ixnumice,     &       
                       nssl_cccn, nssl_alphah, nssl_alphahl,       &
+                      nssl_ipelec, nssl_isaund,                  &
                          nssl_cnoh, nssl_cnohl,                  &
                          nssl_cnor, nssl_cnos,                   &
                          nssl_rho_qh, nssl_rho_qhl,              &
@@ -3547,6 +3577,7 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
                                   nssl_cnor, nssl_cnos,                   &
                                   nssl_rho_qh, nssl_rho_qhl,              &
                                   nssl_rho_qs
+   INTEGER, INTENT(IN), OPTIONAL  :: nssl_ipelec, nssl_isaund
 
    LOGICAL , INTENT(IN)        :: start_of_simulation
    INTEGER , INTENT(IN)        :: ixcldliq, ixcldice, ixnumliq, ixnumice ! CAMMGMP specific variables
@@ -3570,6 +3601,7 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
 ! Local
    INTEGER :: i, j, itf, jtf
    REAL, DIMENSION(20) :: nssl_params
+   INTEGER    :: nssl_ipelec_tmp
 
    warm_rain = .false.
    adv_moist_cond = .true.
@@ -3587,6 +3619,17 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
    ENDIF
    
    IF ( present( nssl_cccn ) ) THEN
+     SELECT CASE(config_flags%mp_physics)
+     CASE (NSSL_2MOM,NSSL_2MOMCCN)
+       IF ( config_flags%elec_physics > 0 ) THEN
+         nssl_ipelec_tmp = nssl_ipelec
+       ELSE
+         nssl_ipelec_tmp = 0.0
+       ENDIF
+     CASE DEFAULT
+       nssl_ipelec_tmp = 0.0
+     END SELECT
+     
      nssl_params(1)  = nssl_cccn
      nssl_params(2)  = nssl_alphah
      nssl_params(3)  = nssl_alphahl
@@ -3597,6 +3640,10 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
      nssl_params(8)  = nssl_rho_qh
      nssl_params(9)  = nssl_rho_qhl
      nssl_params(10) = nssl_rho_qs
+     nssl_params(11) = nssl_ipelec_tmp
+     nssl_params(12) = nssl_isaund
+
+     write(0,*) 'physics_init, ipelec =',nssl_ipelec,nssl_ipelec_tmp
    ENDIF
 
    mp_select: SELECT CASE(config_flags%mp_physics)
